@@ -1,0 +1,32 @@
+{
+  "name": "aws-ip-ranges",
+  "version": "1.0.0",
+  "description": "Fetch AWS IP ranges from official JSON source",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juristat-oss/aws-ip-ranges.git"
+  },
+  "keywords": [
+    "aws",
+    "ip",
+    "ranges",
+    "amazon",
+    "ec2",
+    "route53",
+    "cloudfront"
+  ],
+  "author": "Ben Chociej <ben.chociej@juristat.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/juristat-oss/aws-ip-ranges/issues"
+  },
+  "homepage": "https://github.com/juristat-oss/aws-ip-ranges#readme",
+  "dependencies": {
+    "bluebird": "^3.2.1",
+    "request-promise": "^2.0.0"
+  }
+}
