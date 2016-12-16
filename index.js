@@ -97,24 +97,41 @@ function update() {
 
 function getResults(filter) {
 	return function (data) {
-		return data.prefixes
-		.filter(function (prefix) {
-			if (typeof filter === 'string') {
-				return prefix.service === filter.toUpperCase().trim();
-			}
+		if (!filter) {
+			return data.prefixes.map(function (prefix) {
+				return prefix.ip_prefix || prefix.ipv6_prefix;
+			});
+		}
 
-			for (var key in filter) {
-				if ({}.hasOwnProperty.call(filter, key)) {
-					if (prefix[key] !== filter[key]) {
-						return false;
+		var filters = [].concat(filter);
+
+		return data.prefixes.filter(function (prefix) {
+			return filters.filter(function (filter) {
+				if (typeof filter === 'string') {
+					return prefix.service === filter.toUpperCase().trim();
+				}
+
+				if (typeof filter === 'function') {
+					return filter(prefix);
+				}
+
+				for (var key in filter) {
+					if ({}.hasOwnProperty.call(filter, key)) {
+						if (filter[key].test) {
+							if (!filter[key].test(prefix[key])) {
+								return false;
+							}
+						} else if (prefix[key] !== filter[key]) {
+							return false;
+						}
 					}
 				}
-			}
 
-			return true;
+				return true;
+			}).length > 0;
 		})
 		.map(function (prefix) {
-			return prefix.ip_prefix;
+			return prefix.ip_prefix || prefix.ipv6_prefix;
 		});
 	};
 }
