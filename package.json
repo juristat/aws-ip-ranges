@@ -4,7 +4,7 @@
   "description": "Fetch AWS IP ranges from official JSON source",
   "main": "index.js",
   "scripts": {
-    "test": "xo"
+    "test": "xo && node test.js"
   },
   "repository": {
     "type": "git",
@@ -26,8 +26,8 @@
   },
   "homepage": "https://github.com/juristat-oss/aws-ip-ranges#readme",
   "dependencies": {
-    "bluebird": "^3.2.1",
-    "request-promise": "^2.0.0"
+    "axios": "^0.15.3",
+    "pify": "^2.3.0"
   },
   "devDependencies": {
     "xo": "^0.17.1"

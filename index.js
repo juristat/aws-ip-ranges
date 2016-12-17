@@ -1,22 +1,33 @@
 /* eslint-disable no-use-extend-native/no-use-extend-native */
 var fs = require('fs');
 var path = require('path');
-var Promise = require('bluebird');
-var request = require('request-promise');
+var axios = require('axios');
+var pify = require('pify');
 
 var cacheFile = path.resolve(__dirname, './.aws-ip-ranges.cache');
 var ipUrl = 'https://ip-ranges.amazonaws.com/ip-ranges.json';
-Promise.promisifyAll(fs);
+
+process.on('unhandledRejection', function (reason) {
+	console.error('unhandledRejection; trace or reason follows:');
+
+	if (reason instanceof Error) {
+		console.trace(reason);
+	} else {
+		console.dir(reason);
+	}
+
+	throw new Error('exiting after tracing unhandledRejection');
+});
 
 function debugPrint() {
 	if (module.exports.DEBUG) {
 		var args = (arguments.length >= 1) ? [].slice.call(arguments, 0) : [];
-		console.log.apply(console, args);
+		console.log.apply(console, ['DEBUG:'].concat(args));
 	}
 }
 
 function checkForFile() {
-	return fs.statAsync(cacheFile)
+	return pify(fs.stat)(cacheFile)
 	.then(function (stat) {
 		if (stat.isFile()) {
 			debugPrint('cache file exists');
@@ -30,15 +41,15 @@ function checkForFile() {
 
 function checkAccess(mode) {
 	return function () {
-		return fs.accessAsync(cacheFile, mode)
-		.tap(function () {
+		return pify(fs.access)(cacheFile, mode)
+		.then(function () {
 			debugPrint('cache file access check passed');
 		});
 	};
 }
 
 function readFile() {
-	return fs.readFileAsync(cacheFile, 'utf8')
+	return pify(fs.readFile)(cacheFile, 'utf8')
 	.then(function (contents) {
 		return JSON.parse(contents);
 	});
@@ -59,19 +70,19 @@ function checkIfUpToDate(cache) {
 
 	// doing the comparison exactly this way ensures that invalid dates cause a rejection
 	if (!(cacheTimestamp <= now)) {
-		debugPrint('cache timestamp is in the future - ignoring');
+		debugPrint('cache timestamp is NaN or in the future - ignoring');
 		return Promise.reject();
 	}
 
-	return request.head(ipUrl)
+	return axios.head(ipUrl)
 	.then(function (res) {
-		if (!res['last-modified']) {
-			debugPrint('HEAD request to AWS did not have a last-modified header');
+		if (!res.headers['last-modified']) {
+			debugPrint('HEAD response from AWS did not have a last-modified header');
 			return Promise.reject();
 		}
 
 		// doing the comparison exactly this way ensures that invalid dates cause a rejection
-		if (!(new Date(res['last-modified']) <= cacheTimestamp)) {
+		if (!(new Date(res.headers['last-modified']) <= cacheTimestamp)) {
 			debugPrint('cache is out of date');
 			return Promise.reject();
 		}
@@ -82,16 +93,19 @@ function checkIfUpToDate(cache) {
 }
 
 function update() {
-	return request.get({url: ipUrl, json: true})
+	return axios.get(ipUrl)
 	.then(function (res) {
 		return {
 			timestamp: new Date(),
-			prefixes: res.prefixes
+			prefixes: res.data.prefixes
 		};
 	})
-	.tap(function (newCache) {
+	.then(function (newCache) {
 		debugPrint('writing new cache file');
-		return fs.writeFileAsync(cacheFile, JSON.stringify(newCache), 'utf8');
+		return pify(fs.writeFile)(cacheFile, JSON.stringify(newCache), 'utf8')
+		.then(function () {
+			return newCache;
+		});
 	});
 }
 
@@ -164,19 +178,26 @@ module.exports.getFromCache = function (filter) {
 	return checkForFile()
 	.then(checkAccess(fs.R_OK))
 	.then(readFile)
-	.catchReturn(Promise.reject('cache does not exist or is not readable'))
+	.catch(function () {
+		return Promise.reject('cache does not exist or is not readable');
+	})
 	.then(getResults(filter));
 };
 
 module.exports.deleteCache = function () {
-	return fs.unlinkAsync(cacheFile)
-	.tap(function () {
-		debugPrint('deleted cache file');
+	if (!fs.existsSync(cacheFile)) {
+		debugPrint('no cache file to delete');
+		return Promise.resolve();
+	}
+
+	return pify(fs.unlink)(cacheFile)
+	.then(function () {
+		return debugPrint('deleted cache file');
 	})
 	.catch(function () {
-		return fs.writeFileAsync(cacheFile, '', 'utf8');
-	})
-	.tap(function () {
-		debugPrint('could not delete cache file - wrote empty one instead');
+		return pify(fs.writeFile)(cacheFile, '', 'utf8')
+		.then(function () {
+			debugPrint('could not delete cache file - wrote empty one instead');
+		});
 	});
 };
