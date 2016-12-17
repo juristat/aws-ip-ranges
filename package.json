@@ -1,6 +1,6 @@
 {
   "name": "aws-ip-ranges",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Fetch AWS IP ranges from official JSON source",
   "main": "index.js",
   "scripts": {
