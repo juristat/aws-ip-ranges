@@ -7,18 +7,6 @@ var pify = require('pify');
 var cacheFile = path.resolve(__dirname, './.aws-ip-ranges.cache');
 var ipUrl = 'https://ip-ranges.amazonaws.com/ip-ranges.json';
 
-process.on('unhandledRejection', function (reason) {
-	console.error('unhandledRejection; trace or reason follows:');
-
-	if (reason instanceof Error) {
-		console.trace(reason);
-	} else {
-		console.dir(reason);
-	}
-
-	throw new Error('exiting after tracing unhandledRejection');
-});
-
 function debugPrint() {
 	if (module.exports.DEBUG) {
 		var args = (arguments.length >= 1) ? [].slice.call(arguments, 0) : [];
