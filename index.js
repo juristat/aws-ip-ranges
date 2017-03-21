@@ -4,7 +4,7 @@ var path = require('path');
 var axios = require('axios');
 var pify = require('pify');
 
-var cacheFile = path.resolve(__dirname, './.aws-ip-ranges.cache');
+var cacheFile = process.env.AWS_IP_RANGES_CACHE_FILE_PATH || path.resolve(__dirname, './.aws-ip-ranges.cache');
 var ipUrl = 'https://ip-ranges.amazonaws.com/ip-ranges.json';
 
 function debugPrint() {
@@ -146,6 +146,10 @@ module.exports = function (filter) {
 	.then(checkIfUpToDate)
 	.catch(update)
 	.then(getResults(filter));
+};
+
+module.exports.setCacheFilePath = function (path) {
+	cacheFile = path;
 };
 
 module.exports.isUpToDate = function () {

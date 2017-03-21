@@ -48,4 +48,6 @@ Output is just a list of CIDRs:
 ]
 ```
 
-Copyright (c) 2016 Datanalytics, Inc. d/b/a Juristat. License under the Apache 2.0 license; see the `LICENSE` file for details. If you do not accept the terms of the license, you may not use this software.
+You can change where the cache file is stored; use the environment variable `AWS_IP_RANGES_CACHE_FILE_PATH` or call `awsIpRanges.setCacheFilePath(path)`.
+
+Copyright (c) 2016-2017 Datanalytics, Inc. d/b/a Juristat. License under the Apache 2.0 license; see the `LICENSE` file for details. If you do not accept the terms of the license, you may not use this software.

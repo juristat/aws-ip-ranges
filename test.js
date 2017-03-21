@@ -3,15 +3,19 @@ var fs = require('fs');
 var path = require('path');
 var awsIpRanges = require('./index.js');
 
-var cacheFile = path.resolve(__dirname, './.aws-ip-ranges.cache');
+var badCacheFile = path.resolve(__dirname, './.aws-ip-ranges.cache');
+var goodCacheFile = path.resolve(__dirname, './.aws-ip-ranges.good-test-cache');
 
 awsIpRanges.DEBUG = true;
 
 console.log('TEST: Starting tests');
 
+awsIpRanges.setCacheFilePath(goodCacheFile);
+
 awsIpRanges.deleteCache()
 .then(function () {
-	assert.ok(!fs.existsSync(cacheFile), 'cacheFile has not been deleted (setup)');
+	assert.ok(!fs.existsSync(goodCacheFile), 'cacheFile has not been deleted (setup)');
+	assert.ok(!fs.existsSync(badCacheFile), 'badCacheFile exists (sanity check fail)');
 })
 
 .then(function () {
@@ -27,7 +31,8 @@ awsIpRanges.deleteCache()
 .then(function () {
 	return awsIpRanges('CLOUDFRONT')
 	.then(function () {
-		assert.ok(fs.existsSync(cacheFile), 'cacheFile has not been created');
+		assert.ok(fs.existsSync(goodCacheFile), 'cacheFile has not been created');
+		assert.ok(!fs.existsSync(badCacheFile), 'wrong cacheFile was created (setCacheFilePath not honored)');
 	});
 })
 
@@ -48,7 +53,7 @@ awsIpRanges.deleteCache()
 .then(function () {
 	return awsIpRanges.deleteCache()
 	.then(function () {
-		assert.ok(!fs.existsSync(cacheFile), 'cacheFile has not been deleted (test)');
+		assert.ok(!fs.existsSync(goodCacheFile), 'cacheFile has not been deleted (test)');
 	});
 })
 
