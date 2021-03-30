@@ -26,10 +26,10 @@
   },
   "homepage": "https://github.com/juristat-oss/aws-ip-ranges#readme",
   "dependencies": {
-    "axios": "^0.15.3",
+    "axios": "^0.21.1",
     "pify": "^2.3.0"
   },
   "devDependencies": {
-    "xo": "^0.17.1"
+    "xo": "^0.38.2"
   }
 }
